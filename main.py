@@ -1,36 +1,65 @@
 # main.py
 import os
-from app.parser import extract_text
-from app.preprocessor import clean_text
-from app.vectorizer import vectorize_texts
-from app.ranker import rank_resumes
+import sys
+from app.resume_ranker import ResumeRanker
+from app.text_extractor import extract_text
 
-resumes_dir = "resumes/"
-jd_path = "Job_descriptions/HappyFox_JD.pdf"  # Updated to match actual file name
+def ensure_directories():
+    """Ensure required directories exist."""
+    directories = ['resumes', 'Job_descriptions']
+    for directory in directories:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+            print(f"Created directory: {directory}")
 
-# Load and preprocess JD
-jd_text = clean_text(extract_text(jd_path))
+def get_resume_files():
+    """Get list of resume files from the resumes directory."""
+    resume_files = []
+    for file in os.listdir('resumes'):
+        if file.endswith(('.pdf', '.docx', '.txt')):
+            resume_files.append(os.path.join('resumes', file))
+    return resume_files
 
-# Load and preprocess resumes
-resume_texts = []
-resume_files = []
+def main():
+    try:
+        # Ensure directories exist
+        ensure_directories()
+        
+        # Check for job description
+        jd_path = os.path.join('Job_descriptions', 'job_description.pdf')
+        if not os.path.exists(jd_path):
+            print(f"Error: Job description not found at {jd_path}")
+            print("Please place your job description PDF in the Job_descriptions directory.")
+            return
+        
+        # Get resume files
+        resume_files = get_resume_files()
+        if not resume_files:
+            print("Error: No resume files found in the resumes directory.")
+            print("Please place resume files (PDF, DOCX, or TXT) in the resumes directory.")
+            return
+        
+        print(f"Found {len(resume_files)} resume(s) to analyze...")
+        
+        # Initialize ranker
+        ranker = ResumeRanker()
+        
+        # Rank resumes
+        print("\nAnalyzing resumes...")
+        results = ranker.rank_resumes(jd_path, resume_files)
+        
+        # Display results
+        print("\nRanked Resumes:")
+        print("-" * 50)
+        for i, result in enumerate(results, 1):
+            print(f"\n{i}. {os.path.basename(result['resume_path'])}")
+            print(ranker.get_score_breakdown(result))
+            print("-" * 50)
+            
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        sys.exit(1)
 
-for file in os.listdir(resumes_dir):
-    if file.endswith((".pdf", ".docx")):
-        path = os.path.join(resumes_dir, file)
-        raw = extract_text(path)
-        resume_texts.append(clean_text(raw))
-        resume_files.append(file)
-
-# Vectorize
-documents = [jd_text] + resume_texts
-tfidf_matrix = vectorize_texts(documents)
-
-# Rank
-rankings = rank_resumes(tfidf_matrix)
-
-# Show Results
-print("\nRanked Resumes:")
-for idx, score in rankings:
-    print(f"{resume_files[idx]} — Score: {score:.4f}")
+if __name__ == "__main__":
+    main()
  

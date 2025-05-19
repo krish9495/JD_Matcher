@@ -1,21 +1,24 @@
-import fitz 
-import docx
+from app.resume_ranker import ResumeRanker
+from app.text_extractor import extract_text
 
-def extract_text_from_pdf(path):
-    doc = fitz.open(path)
-    return "\n".join([page.get_text() for page in doc])
+def main():
+    # Initialize the ranker
+    ranker = ResumeRanker()
 
-def extract_text_from_docx(path):
-    doc = docx.Document(path)
-    return "\n".join([p.text for p in doc.paragraphs])
+    # Example usage
+    jd_path = "Job_descriptions/job_description.pdf"  # Update with your JD path
+    resume_paths = [
+        "resumes/resume1.pdf",  # Update with your resume paths
+        "resumes/resume2.pdf"
+    ]
 
-def extract_text(path):
-    if path.endswith(".pdf"):
-        return extract_text_from_pdf(path)
-    elif path.endswith(".docx"):
-        return extract_text_from_docx(path)
-    elif path.endswith(".txt"):
-        with open(path, 'r', encoding='utf-8') as f:
-            return f.read()
-    else:
-        raise ValueError("Unsupported file format.")
+    # Rank resumes
+    results = ranker.rank_resumes(jd_path, resume_paths)
+
+    # Get detailed breakdown for each resume
+    for result in results:
+        print(f"\nResume: {result['resume_path']}")
+        print(ranker.get_score_breakdown(result))
+
+if __name__ == "__main__":
+    main()
