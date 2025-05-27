@@ -28,7 +28,7 @@ A smart Python-based command-line tool that ranks resumes against a job descript
 ---
 
 ## 🗂️ Project Structure
-
+```
 resume-ranker/
 ├── app/
 │ ├── resume_ranker.py # Core ranking logic
@@ -39,7 +39,7 @@ resume-ranker/
 ├── main.py # CLI entry point
 ├── requirements.txt
 └── README.md
-
+```
 
 ---
 
